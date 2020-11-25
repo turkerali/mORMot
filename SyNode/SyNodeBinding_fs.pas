@@ -65,7 +65,7 @@ begin
     {$ifdef SM_DEBUG_FSTRACEFILEREAD}
     SynSMLog.Add.Log(sllDebug, 'fs_loadFile (%) called', name);
     {$ENDIF}
-    if not FileExists(name) then
+    if not FileExists(name, false) then
       raise ESMException.Create('file does not exist');
     // implementation below dont work if called in the same time from differnt thread
     // TFileStream.Create(name, fmOpenRead).Free; // Check that file exists and can be opened;
@@ -260,7 +260,7 @@ begin
     if (argc < 1) or not in_argv[0].isString then
       raise ESMException.Create(USAGE);
     filePath := in_argv[0].asJSString.ToString(cx);
-    val.asBoolean := FileExists(filePath);
+    val.asBoolean := FileExists(filePath, false);
     vp.rval := val;
     Result := True;
   except
@@ -296,7 +296,7 @@ begin
     {$ifdef SM_DEBUG_FSTRACEFILEREAD}
     SynSMLog.Add.Log(sllDebug, 'fs_internalModuleReadFile (%) called', filePath);
     {$ENDIF}
-    if FileExists(filePath) then begin
+    if FileExists(filePath, false) then begin
       fileContent := cx.NewJSString(AnyTextFileToRawUTF8(filePath, true)).ToJSVal;
       vp.rval := fileContent;
       {$ifdef SM_DEBUG_FSDUMPFILEEXCERPT}
@@ -596,7 +596,7 @@ begin
     fromPath := vp.argv[0].asJSString.ToString(cx);
     toPath := vp.argv[1].asJSString.ToString(cx);
     {$IFDEF MSWINDOWS} // libc rename implementation rewrites destination if it's already exist
-    if FileExists(toPath) then
+    if FileExists(toPath, false) then
       if not SysUtils.DeleteFile(toPath) then begin
         err := GetLastOSError();
         if (err <> 0) then
@@ -648,7 +648,7 @@ begin
     if not FilenameIsAbsolute(filePath) then
     {$ENDIF}
       raise ESMException.Create('no relative path allowed in loadFile');
-    if not FileExists(filePath) then
+    if not FileExists(filePath, false) then
     begin
       vp.rval := JSVAL_NULL;
     end
@@ -728,7 +728,7 @@ begin
       raise ESMException.Create('usage appendFile(filePath: String, fileContent: String|Object|ArrayBuffer [,encoding]');
     in_argv := vp.argv;
     filePath := in_argv[0].asJSString.ToSynUnicode(cx);
-    if not FileExists(filePath) then begin
+    if not FileExists(filePath, false) then begin
       FFile := FileCreate(filePath);
       if PtrInt(FFile) > 0 then
         FileClose(FFile);
@@ -769,7 +769,7 @@ begin
     filePath := in_argv[0].asJSString.ToSynUnicode(cx);
     if SysUtils.DeleteFile(filePath) then
       val.asBoolean := True
-    else if fileExists(filePath) then
+    else if fileExists(filePath, false) then
       raise Exception.Create('can''t delete file')
     else
       val.asBoolean := True;
@@ -857,7 +857,7 @@ begin
   if not result then exit;
   try
     fn := vp.argv^[0].asJSString.ToString(cx);
-    if not FileExists(fn) then
+    if not FileExists(fn, false) then
       raise ESMException.CreateFmt('file "%" does not exist', [fn]);
     src := AnyTextFileToRawUTF8(fn, true);
     if not IsValidUTF8(src) then
